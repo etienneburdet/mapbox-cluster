@@ -1,9 +1,9 @@
 <script>
   import { onMount, setContext } from 'svelte'
-	import { key, initMap, addSource } from './mapbox.js'
+	import { mapbox, key } from './mapbox.js'
 
-  import ClusterLayer from './components/ClusterLayer.svelte'
-
+  import Layer from './components/Layer.svelte'
+  import { layers } from './layers.js'
   let map
   let container
   let features = []
@@ -13,17 +13,29 @@
   })
 
   onMount(() => {
-  	map = initMap(container)
-		map.on('load', addSource(map))
+  	map = new mapbox.Map({
+      container,
+      zoom: 0.3,
+      center: [0, 20],
+      style: 'mapbox://styles/mapbox/light-v10'
+    })
+
+		map.on('load', () => {
+      map.addSource('earthquakes', {
+        'type': 'geojson',
+        'data': 'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson',
+        'cluster': true,
+        'clusterRadius': 10
+      })
+    })
   })
 </script>
 
 <div bind:this={container}>
 	{#if map}
-	<ClusterLayer />
-		{#each features as feature}
-			{console.log(feature.properties)}
-		{/each}
+    {#each layers as layer}
+      <Layer {layer} />
+    {/each}
 	{/if}
 </div>
 
