@@ -3,11 +3,11 @@ import mapbox from 'mapbox-gl'
 mapbox.accessToken = 'pk.eyJ1IjoiZXRpZW5uZWJ1cmRldCIsImEiOiJja2F4bHN2MXUwMGliMnJsN2RzNXowYzQ1In0.ju6w4WN1F_CRVNXtp5L-7w';
 const key = {}
 
-const initMap = (container) =>  new mapbox.Map({
+const initMap = (container) => new mapbox.Map({
   container,
-	zoom: 0.3,
-	center: [0, 20],
-	style: 'mapbox://styles/mapbox/light-v10'
+  zoom: 0.3,
+  center: [0, 20],
+  style: 'mapbox://styles/mapbox/light-v10'
 })
 
 
@@ -22,78 +22,78 @@ const updateFeatures = (map) => () => {
   setFeatures(map)
 }
 
-const mag1 = ['<', ['get', 'mag'], 2];
-const mag2 = ['all', ['>=', ['get', 'mag'], 2], ['<', ['get', 'mag'], 3]];
-const mag3 = ['all', ['>=', ['get', 'mag'], 3], ['<', ['get', 'mag'], 4]];
-const mag4 = ['all', ['>=', ['get', 'mag'], 4], ['<', ['get', 'mag'], 5]];
-const mag5 = ['>=', ['get', 'mag'], 5];
-const colors = ['#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c']
-
 const addSource = (map) => () => {
   map.addSource('earthquakes', {
     'type': 'geojson',
-    'data':
-    'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson',
+    'data': 'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson',
     'cluster': true,
-    'clusterRadius': 80,
-    'clusterProperties': {
-      // keep separate counts for each magnitude category in a cluster
-      'mag1': ['+', ['case', mag1, 1, 0]],
-      'mag2': ['+', ['case', mag2, 1, 0]],
-      'mag3': ['+', ['case', mag3, 1, 0]],
-      'mag4': ['+', ['case', mag4, 1, 0]],
-      'mag5': ['+', ['case', mag5, 1, 0]]
-    }
+    'clusterRadius': 10
   })
 }
 
 const addLayers = (map) => () => {
+
   map.addLayer({
-    'id': 'earthquake_circle',
-    'type': 'circle',
-    'source': 'earthquakes',
-    'filter': ['!=', 'cluster', true],
-    'paint': {
+    id: 'clusters',
+    type: 'circle',
+    source: 'earthquakes',
+    filter: ['has', 'point_count'],
+    paint: {
+      // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
+      // with three steps to implement three types of circles:
+      //   * Blue, 20px circles when point count is less than 100
+      //   * Yellow, 30px circles when point count is between 100 and 750
+      //   * Pink, 40px circles when point count is greater than or equal to 750
       'circle-color': [
-        'case',
-        mag1,
-        colors[0],
-        mag2,
-        colors[1],
-        mag3,
-        colors[2],
-        mag4,
-        colors[3],
-        colors[4]
+        'step',
+        ['get', 'point_count'],
+        '#51bbd6',
+        100,
+        '#f1f075',
+        750,
+        '#f28cb1'
       ],
-      'circle-opacity': 0.6,
-      'circle-radius': 12
+      'circle-radius': [
+        'step',
+        ['get', 'point_count'],
+        20,
+        100,
+        30,
+        750,
+        40
+      ]
     }
   })
 
   map.addLayer({
-    'id': 'earthquake_label',
-    'type': 'symbol',
-    'source': 'earthquakes',
-    'filter': ['!=', 'cluster', true],
-    'layout': {
-      'text-field': [
-        'number-format',
-        ['get', 'mag'],
-        { 'min-fraction-digits': 1, 'max-fraction-digits': 1 }
-      ],
-      'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
-      'text-size': 10
-    },
-    'paint': {
-      'text-color': [
-      'case',
-      ['<', ['get', 'mag'], 3],
-      'black',
-      'white'
-      ]
+    id: 'cluster-count',
+    type: 'symbol',
+    source: 'earthquakes',
+    filter: ['has', 'point_count'],
+    layout: {
+      'text-field': '{point_count_abbreviated}',
+      'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+      'text-size': 12
+    }
+  })
+
+  map.addLayer({
+    id: 'unclustered-point',
+    type: 'circle',
+    source: 'earthquakes',
+    filter: ['!', ['has', 'point_count']],
+    paint: {
+      'circle-color': '#11b4da',
+      'circle-radius': 4,
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#fff'
     }
   })
 }
 
-export { key, initMap, addSource, addLayers }
+export {
+  key,
+  initMap,
+  addSource,
+  addLayers
+}

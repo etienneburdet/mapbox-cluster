@@ -3,7 +3,6 @@
 	import { key, initMap, addSource } from './mapbox.js'
 
   import ClusterLayer from './components/ClusterLayer.svelte'
-	import Marker from './components/Marker.svelte'
 
   let map
   let container
