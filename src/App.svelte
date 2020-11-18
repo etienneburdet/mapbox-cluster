@@ -1,9 +1,11 @@
 <script>
   import { onMount, setContext } from 'svelte'
 	import { mapbox, key } from './mapbox.js'
+  import { handleMapClick } from './actions.js'
 
   import Layer from './components/Layer.svelte'
   import { layers } from './layers.js'
+
   let map
   let container
   let features = []
@@ -27,14 +29,25 @@
         'cluster': true,
         'clusterRadius': 10
       })
+
+      map.addSource('expanded', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: []
+        }
+      })
     })
+
+    // map.on('click', 'clusters', getClusterPoints(map))
   })
+
 </script>
 
 <div bind:this={container}>
 	{#if map}
     {#each layers as layer}
-      <Layer {layer} />
+      <Layer {layer} on:mapClick={handleMapClick} />
     {/each}
 	{/if}
 </div>

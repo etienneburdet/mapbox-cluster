@@ -52,5 +52,16 @@ export const layers = [
       'circle-stroke-width': 1,
       'circle-stroke-color': '#fff'
     }
+  },
+  {
+    id: 'expanded-points',
+    type: 'circle',
+    source: 'expanded',
+    paint: {
+      'circle-color': '#11b4da',
+      'circle-radius': 10,
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#000'
+    }
   }
 ]
