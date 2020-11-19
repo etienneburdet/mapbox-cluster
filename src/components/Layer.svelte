@@ -10,6 +10,7 @@ const dispatch = createEventDispatcher()
 
 
 export let layer
+export let visible
 
 const dispatchLayerEvent = (event) => {
   const features = map
@@ -25,4 +26,6 @@ map.on('load', () => {
 })
 
 map.on('click', layer.id, dispatchLayerEvent)
+
+$: map.isStyleLoaded() && map.setLayoutProperty(layer.id, 'visibility', visible ? 'visible' : 'none')
 </script>

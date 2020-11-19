@@ -1,10 +1,12 @@
+import { visibleLayers } from './store.js'
+
 export const handleMapClick = (event) => {
   switch (event.detail.layerId) {
     case 'clusters':
       expandCluster(event)
       break
     case 'expanded-points': 
-      hideExpanded(event)
+      hideExpanded()
       break
   }
 }
@@ -27,17 +29,14 @@ const expandCluster = (event) => {
 const showExpandLayer = (map) => (error, leaves) => {
   if (error) { console.error('Set point error', error) }
 
-  ['clusters', 'count', 'unclustered'].forEach(layerId => {
-    map.setLayoutProperty(layerId, 'visibility', 'none')
-  })
-  map.setLayoutProperty('expanded-points', 'visibility', 'visible')
-
   const expandedLeaves = leaves.map(makeCoordinates(leaves[0]))
 
   map.getSource('expanded').setData({
     type: 'FeatureCollection',
     features: expandedLeaves
   })
+
+  visibleLayers.set(['expanded-points'])
 }
 
 const makeCoordinates = (startPoint) => (leave, index) => {
@@ -47,12 +46,4 @@ const makeCoordinates = (startPoint) => (leave, index) => {
   return expandedLeave
 }
 
-const hideExpanded = (event) => {
-  const map = event.detail.map
-  const mapevent = event.detail.mapevent
-
-  map.setLayoutProperty('expanded-points', 'visibility', 'none')
-  map.setLayoutProperty('clusters', 'visibility', 'visible')
-  map.setLayoutProperty('count', 'visibility', 'visible')
-  map.setLayoutProperty('unclustered', 'visibility', 'visible')
-}
+const hideExpanded = () => visibleLayers.set(['clusters', 'count', 'unclustered'])
